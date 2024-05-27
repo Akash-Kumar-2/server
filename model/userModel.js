@@ -15,15 +15,16 @@ username: {
 },
 email: {
   type: String,
-  required: [true, 'User must have a Email'],
-  validate: [validator.isEmail, 'please enter a valid email'],
+  required: [true, 'User must have an Email'],
+  validate: [validator.isEmail, 'Please enter a valid email'],
   unique: true,
   lowercase: true  
 },
 gender: {
     type: String,
     required: true,
-    enum: ["male", "female"],
+    enum: ["male", "female","others"],
+    default: ''
   },
   password: {
     type: String,
@@ -47,28 +48,61 @@ gender: {
   passwordResetExpires: Date,
 role: {
     type: String,
-    enum:['Job Seeker', 'Recruiter','admin'],
-    default: 'Job Seeker'
+    enum:['user','admin'],
+    default: 'user'
+},
+userType: {
+  type:String,
+  enum:['Recruiter','Job-Seeker'],
+  default: 'Job-Seeker'
+},
+dob: {
+  type: String,
 },
 profilePic: {
     type: String,
     deafult: ''
 },
-connections: {
-    type:[String],
-    default: []
-},
+friends: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  }
+],
+
+friend_requests: [
+  {
+    sent_by: {
+      type: mongoose.Schema.Types.ObjectId, // Not necessary to add full details
+      ref: "User"
+    },
+    sent_at: {
+      type: Date,
+      required: true
+    }
+  }
+],
 bio: {
     type: String,
     default: ''
 },
+verificationCode:{
+  type:String,
+  select:false,
+},
+notifications: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Notification"
+  }
+],
 isFrozen :{
     type: Boolean,
     default: false
 },
 active: {
     type: Boolean,
-    default: true
+    default: false
 }
 },
 {
@@ -97,10 +131,12 @@ userSchema.pre('save', async function(next) {
 
 
   //Query Middleware
-  userSchema.pre(/^find/, function(next) {
-    this.find({ active: { $ne: false } });
-    next();
-  });
+  // userSchema.pre(/^find/, function(next) {
+  //   if(!this.verificationCode)
+  //   this.find({ active: { $ne: false } });
+
+  //   next();
+  // });
    
   userSchema.methods.correctPassword = async function(
     CandidatePassword,
@@ -132,6 +168,11 @@ userSchema.pre('save', async function(next) {
     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   
     return resetToken;
+  };
+  userSchema.methods.createVerificationCode = function() {
+    const verificationCode = crypto.randomBytes(32).toString('hex');
+    this.verificationCode = crypto.createHash('sha256').update(verificationCode).digest('hex');
+    return verificationCode;
   };
 
 const User = mongoose.model('User', userSchema);

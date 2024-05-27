@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
 const crypto = require('crypto');
-const sendMail = require('./../utils/sendMail');
+const sendEmail = require('./../utils/sendMail');
 
 const signToken = id =>{
     return jwt.sign({id},process.env.JWT_SECRET,{
@@ -21,7 +21,7 @@ const createSendToken = (user, statusCode, res) => {
       //so that data cannot be modified in cookie
       httpOnly: true
     };
-    // if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+    if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
     res.cookie('jwt', token, cookieOptions);
   
@@ -47,7 +47,18 @@ exports.signup = catchAsync(async(req, res, next) =>{
       gender:req.body.gender,
       role: req.body.role
     });
+    
+    const verificationCode = newUser.createVerificationCode();
+    await newUser.save({ validateBeforeSave: false });
+    
+    const redirectUrl = `${req.protocol}://${req.get('host')}/api/v1/users/verifyemail/${verificationCode}`;
 
+    const to = newUser.email;
+    const subject = "Account verification link";
+    const message = ` Kindly click on the link ${redirectUrl} to verify your account status`;
+    sendEmail(to, subject, message);
+    
+    console.log(redirectUrl);
     createSendToken(newUser,201,res);
 });
 
@@ -74,6 +85,16 @@ exports.login = catchAsync(async(req,res, next) => {
     return next(new AppError('Invalid email or password', 401));
   }
   //3)if verified, send response to client
+  console.log(user.active);
+
+  if (!user.active) {
+    return next(
+      new AppError(
+        `Your Email is not verified yet Check your ${user.email} for link `,
+        401
+      )
+    );
+  }
   createSendToken(user, 200, res);
 
 });
@@ -91,6 +112,8 @@ exports.protect = catchAsync(async (req,res,next) => {
   if(req.headers.authorization && req.headers.authorization.startsWith('Bearer'))
     {
       token = req.headers.authorization.split(' ')[1];
+    }else if (req.cookies.jwt) {
+      token = req.cookies.jwt;
     }
   if(!token)
     {
@@ -108,9 +131,9 @@ exports.protect = catchAsync(async (req,res,next) => {
         )
       );
     }
-     
-     req.user = freshUser;
-     next();
+    res.locals.user = freshUser;
+    req.user = freshUser;
+    next();
 });
 exports.restrictTo = (...roles) => {
   //middleware
@@ -142,14 +165,13 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
     'host'
   )}/api/v1/users/resetPassword/${resetToken}`;
 
-  const message = `Forget your password? Submit a PATCH request with your new password and password confirm to: ${resetURL}.\n
-  If you didn't forget your password ignore this email!`;
   try {
-    await sendMail({
-      email: user.email,
-      subject: 'Your password reset token(valid for 10 min)',
-      message
-    });
+     
+    const to = user.email;
+    const subject = "Reset Token. Do not Share!!!!!";
+    const message = `Forget your password? Submit a PATCH request with your new password and password confirm to: ${resetURL}.\n
+    If you didn't forget your password ignore this email!`;
+    sendEmail(to, subject, message);
 
     res.status(200).json({
       status: 'Success',
@@ -196,6 +218,29 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   //   status: 'success',
   //   token
   // });
+});
+
+exports.verifyEmailHandler = catchAsync(async (req, res, next) => {
+  //1)Get user based on the code
+  const verificationCode = crypto
+    .createHash("sha256")
+    .update(req.params.Code)
+    .digest("hex");
+
+
+
+  const user = await User.findOne({
+    verificationCode:verificationCode,
+  });
+
+  if (!user) {
+    return next(new AppError("Invalid Registration Link...", 400));
+  }
+  user.active = true;
+  user.verificationCode = null;
+  await user.save({ validateBeforeSave: false });
+  //4) log the user in send JWT
+  createSendToken(user, 200, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
