@@ -2,11 +2,18 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cloudinary = require('cloudinary').v2;
 
+//uncaught error handling should be done before execution of our code
+process.on('uncaughtException', err => {
+  console.log('Uncaught exception Shutting Down..');
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
 dotenv.config({ path: './config.env'});
 
 const app = require('./app');
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 const DB = process.env.DATABASE.replace(
   '<password>',
@@ -20,19 +27,29 @@ api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const options = {
-  useNewUrlParser: true, // Use the new URL parser (recommended)
-  useUnifiedTopology: true, // Use the new Server Discover and Monitoring engine
-  // useCreateIndex: true, // Make Mongoose use `createIndex()` instead of `ensureIndex()` (deprecated)
-  // useFindAndModify: false // Use native `findOneAndUpdate()` rather than `findAndModify()`
+  useNewUrlParser: true, 
+  useUnifiedTopology: true, 
+  // useCreateIndex: true,
+  // useFindAndModify: false
 };
 
 mongoose.connect(DB)
   .then(() => {
-    console.log('Connected to MongoDB');
+    console.log('Connected to DataBase');
   })
   .catch(err => {
-    console.error('Error connecting to MongoDB', err);
+    console.error('Error connecting to DataBase', err);
   });
+
 const server = app.listen(PORT, () => {
   console.log(`Listening on PORT: ${PORT}`);
+});
+
+//unhandled Promise Rejection
+process.on('unhandledRejection', err => {
+  console.log('Unhandled Rejection Shutting Down..');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
 });
