@@ -12,8 +12,12 @@ const postSchema = new mongoose.Schema({
         maxLength: 500,
     },
     img: {
-       type: String,
-    },
+        filename: {
+          type: String,
+          default: "Post_Image",
+        },
+        url: String,
+      },
     likes: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'User',
@@ -42,5 +46,5 @@ const postSchema = new mongoose.Schema({
     timestamps: true
 });
 
-const Post = mongoose.Mpdel('Post',postSchema);
+const Post = mongoose.model('Post',postSchema);
 module.exports = Post;

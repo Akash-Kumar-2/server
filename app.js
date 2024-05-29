@@ -9,6 +9,7 @@ const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoutes');
 const postRouter = require('./routes/postRoutes');
 const searchRouter = require('./routes/searchRoutes');
+const friendRouter = require('./routes/friendRoutes');
 
 const app = express();
 
@@ -33,6 +34,7 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use(express.json());
 
+app.use('/api/v1/friend',friendRouter);
 app.use('/api/v1/search',searchRouter);
 app.use('/api/v1/users',userRouter);
 app.use('/api/v1/posts', postRouter);

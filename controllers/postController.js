@@ -47,17 +47,45 @@ exports.createPost = catchAsync(async (req, res, next) => {
 });
 
 exports.getPost = catchAsync(async (req, res, next) => {
-res.status(404).json({
+
+    const postId = req.params.id; 
+    const post = await Post.findById(postId);
+    if(!post)
+        {
+            return next(new AppError('Post Not Found!!!',404));
+        }
+    
+
+res.status(200).json({
     status: 'success',
-    message: 'Route Not Defined yet'
+    data: {
+        post
+    }
 });
 });
 
 exports.deletePost = catchAsync(async (req, res, next) => {
-    res.status(404).json({
-        status: 'success',
-        message: 'Route Not Defined yet'
-    });
+    const postId = req.params.id; 
+    const post = await Post.findById(postId);
+    if(!post)
+        {
+            return next(new AppError('Post Not Found!!!',404));
+        }
+    if(post.postedBy.toString()!==req.user._id.toString())
+        {
+            return next(new AppError('unauthorised Action',401));
+        }
+     if(post.img)
+        {
+            const imgId = post.img.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(imgId);
+        }   
+        await Post.findByIdAndDelete(postId);
+
+res.status(200).json({
+    status: 'success',
+    message: 'Deleted'
+});
     });
 exports.likePost = catchAsync(async (req, res, next) => {
         res.status(404).json({
