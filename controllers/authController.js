@@ -45,7 +45,7 @@ exports.signup = catchAsync(async(req, res, next) =>{
       password: req.body.password,
       passwordConfirm:req.body.passwordConfirm,
       gender:req.body.gender,
-      role: req.body.role
+      userType: req.body.userType
     });
     
     const verificationCode = newUser.createVerificationCode();

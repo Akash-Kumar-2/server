@@ -79,6 +79,10 @@ friend_requests: [
     sent_at: {
       type: Date,
       required: true
+    },
+    isSent: {
+      type: Boolean,
+      default: false
     }
   }
 ],
