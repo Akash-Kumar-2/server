@@ -115,3 +115,63 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
       data: null
     });
   });
+
+  exports.getSuggestedUsers = catchAsync(async(req, res, next) => {
+     // exclude the current user from suggested users array and exclude users that current user is already following
+		const userId = req.user._id;
+
+		const userfriends = await User.findById(userId).select('friends');
+
+		const users = await User.aggregate([
+			{
+				$match: {
+					_id: { $ne: userId },
+          role:{ $ne: 'admin'},
+          isFrozen:{$ne: true}
+				},
+			},
+			{
+				$sample: { size: 10 },
+			},
+		]);
+		const filteredUsers = users.filter((user) => !userfriends.friends.includes(user._id));
+		const suggestedUsers = filteredUsers.slice(0, 4);
+
+
+		res.status(200).json({
+      status: 'success',
+      result:suggestedUsers.length,
+      data:{
+        suggestedUsers
+
+      }
+      });
+  });
+
+  exports.freezeAccount = catchAsync(async( req, res, next) =>{
+    const user = await User.findById(req.params.id);
+		if (!user) {
+			return next(new AppError('User not Found',404));
+		}
+    if(!user.isFrozen)
+		{user.isFrozen = true;
+      await user.save();
+
+		res.status(200).json({ 
+      status: 'Success',
+      message: 'Account Frozen' 
+    });
+    }
+    else
+    {user.isFrozen = false;
+      await user.save();
+
+		res.status(200).json({ 
+      status: 'Success',
+      message: 'Account unFrozen' 
+    });
+    }
+		
+  });
+
+
