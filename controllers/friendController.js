@@ -51,12 +51,23 @@ exports.acceptFriendRequest = catchAsync(async (req, res, next) => {
     {
       return next(new AppError('User Does not exist', 404));
     }
-  //check if request exist or not
-  if (user.friend_requests.some(request => request.sent_by.toString() !== req.params.id))
-    {
-         return next(new AppError('Request Does Not exist', 404));
-    } 
+  
+      // Check if the friend request exists and isSent is false
+  const request = user.friend_requests.find(request => request.sent_by.toString() === id && request.isSent === false);
+  if (!request) {
+    return next(new AppError('Request does not exist or has already been accepted', 404));
+  }
+  
 
+  // // Check if the friend request exists
+  // if (!user.friend_requests.map(request => request.sent_by.toString()).includes(id)) {
+  //   return next(new AppError('Request does not exist', 404));
+  // }
+
+  // if(user.friend_requests.isSent)
+  //   {
+  //     return next(new AppError('Unauthorised action',400));
+  //   }
 
   // const { requesterId } = req.body;
 
