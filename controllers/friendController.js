@@ -21,6 +21,11 @@ exports.sendFriendRequest = catchAsync(async (req, res, next) => {
 
   const currUser = await User.findById(req.user._id);
 
+   // Check if they are friends
+   if (currUser.friends.includes(id)) {
+    return next(new AppError('Friend request cannot be sent since friend exist', 400));
+  }
+
   // Check if a friend request already exists
   if (user.friend_requests.some(request => request.sent_by.toString() === req.user.id)) {
     return next(new AppError('Friend request already sent', 400));

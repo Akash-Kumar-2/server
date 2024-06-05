@@ -16,10 +16,10 @@ router.patch('/resetPassword/:token', authController.resetPassword);
 router.use(authController.protect);
 
 
-router.patch('/send-request/:id',authController.restrictTo('user'), friendController.sendFriendRequest);
-router.patch('/accept-request/:id',authController.restrictTo('user'), friendController.acceptFriendRequest);
-router.patch('/decline-request/:id',authController.restrictTo('user'), friendController.declineFriendRequest);
-router.patch('/unfriend/:id',authController.restrictTo('user'), friendController.unFriend);
+router.patch('/:id/send-request',authController.restrictTo('user'), friendController.sendFriendRequest);
+router.patch('/:id/accept-request',authController.restrictTo('user'), friendController.acceptFriendRequest);
+router.patch('/:id/decline-request',authController.restrictTo('user'), friendController.declineFriendRequest);
+router.patch('/:id/unfriend',authController.restrictTo('user'), friendController.unFriend);
 
 router.patch(
   '/updateMyPassword',
