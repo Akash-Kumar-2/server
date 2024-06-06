@@ -59,10 +59,45 @@ userType: {
 dob: {
   type: String,
 },
-profilePic: {
+profile_photo: {
+  filename: {
     type: String,
-    deafult: ''
+    default: "profilePhoto",
+  },
+  url: {
+    type: String
+  },
 },
+background_photo: {
+  filename: {
+    type: String,
+    default: "coverPhoto",
+  },
+
+  url: {
+    type: String,
+    default:
+      "https://images.unsplash.com/photo-1510070112810-d4e9a46d9e91?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
+},
+mobile_no: {
+  type: Number,
+  maxlength: 14,
+  minlength: 10,
+},
+saved: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+  },
+],
+
+favorites: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+  },
+],
 friends: [
   {
     type: mongoose.Schema.Types.ObjectId,
