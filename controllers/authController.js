@@ -5,6 +5,7 @@ const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
 const crypto = require('crypto');
 const sendEmail = require('./../utils/sendMail');
+const { uploadOnCloudinary} = require('./../utils/cloudinaryConfig');
 
 const signToken = id =>{
     return jwt.sign({id},process.env.JWT_SECRET,{
@@ -38,6 +39,21 @@ const createSendToken = (user, statusCode, res) => {
   };
 
 exports.signup = catchAsync(async(req, res, next) =>{
+  const picname = req.body.name.split(" ")[0];
+  const gender = req.body.gender;
+
+  const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${picname}`;
+  const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${picname}`;
+    
+  const imageUrl = gender === "male" ? boyProfilePic : girlProfilePic;
+
+  const uploadedImage = await uploadOnCloudinary(imageUrl);
+  if (!uploadedImage) {
+    return next(new AppError('Error uploading profile picture to Cloudinary', 500));
+  }
+    
+    
+
     const newUser = await User.create({
       name: req.body.name,
       username: req.body.username,
@@ -45,7 +61,10 @@ exports.signup = catchAsync(async(req, res, next) =>{
       password: req.body.password,
       passwordConfirm:req.body.passwordConfirm,
       gender:req.body.gender,
-      userType: req.body.userType
+      userType: req.body.userType,
+      profile_photo: {
+        url: uploadedImage.secure_url
+      }
     });
     
     const verificationCode = newUser.createVerificationCode();
