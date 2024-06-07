@@ -1,6 +1,8 @@
 const express = require('express');
 const postController = require('./../controllers/postController');
+const commentController = require('./../controllers/commentController');
 const authController = require('./../controllers/authController');
+const upload = require('./../utils/uploadConfig'); // Import the multer configuration
 
 const router = express.Router();
 
@@ -12,12 +14,11 @@ router
 router.use(authController.protect);
 
 router.route('/feed').get(postController.getFeedPosts);
-router.route('/create').post(postController.createPost);
+router.route('/create').post(upload.single('img'), postController.createPost); // Use multer middleware here
 router.route('/user/:username').get(postController.getUserPosts);
 
-
-
-router.route('/like/:id').put(postController.likePost);
-router.route('/reply/:id').put(postController.replyToPost);  
+router.route('/:id/likeunlike').put(postController.likeUnlikePost);
+router.route('/:id/comment').post(upload.single('commentimg'),commentController.replyToPost);
+router.route('/:postId/comment/:commentId/delete').delete(commentController.deleteReply);
 
 module.exports = router;
