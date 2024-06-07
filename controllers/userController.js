@@ -1,6 +1,8 @@
 const User = require('./../model/userModel');
 const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
+const { uploadOnCloudinary, deleteFromCloudinary } = require('./../utils/cloudinaryConfig');
+
 
 const filterObj = (Obj, ...allowedFields) => {
   const newObj = {};
@@ -28,8 +30,41 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   //2) filter out unwanted field names that are not allowed to be updated.
-  const filteredBody = filterObj(req.body, 'name', 'email','gender','bio','profilePic','userType','dob');
-  //3) update data
+  const filteredBody = filterObj(req.body, 'name', 'email','gender','bio','profile_photo','background_photo','mobile_no','userType','dob');
+  
+ //3) Handle profile photo update
+ if (req.files && req.files.profile_photo) {
+  const currentUser = await User.findById(req.user.id);
+  if (currentUser.profile_photo.url) {
+    await deleteFromCloudinary(currentUser.profile_photo.filename);
+  }
+  const uploadedImage = await uploadOnCloudinary(req.files.profile_photo[0].path);
+  if (!uploadedImage) {
+    return next(new AppError('Error uploading profile picture to Cloudinary', 500));
+  }
+  filteredBody.profile_photo = {
+    filename: uploadedImage.public_id,
+    url: uploadedImage.secure_url
+  };
+}
+//4) Handle background photo update
+if (req.files && req.files.background_photo) {
+  const currentUser = await User.findById(req.user.id);
+  if (currentUser.background_photo.url && currentUser.background_photo.url !== "https://images.unsplash.com/photo-1510070112810-d4e9a46d9e91?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D") {
+    await deleteFromCloudinary(currentUser.background_photo.filename);
+  }
+  const uploadedImage = await uploadOnCloudinary(req.files.background_photo[0].path);
+  if (!uploadedImage) {
+    return next(new AppError('Error uploading background picture to Cloudinary', 500));
+  }
+  filteredBody.background_photo = {
+    filename: uploadedImage.public_id,
+    url: uploadedImage.secure_url
+  };
+}
+
+
+  //5) update data
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true

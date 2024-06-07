@@ -2,6 +2,7 @@ const express = require('express');
 const userController = require('./../controllers/userController');
 const authController = require('./../controllers/authController');
 const friendController = require('./../controllers/friendController');
+const upload = require('./../utils/uploadConfig');
 
 const router = express.Router();
 
@@ -34,6 +35,10 @@ router.route('/me').get(
 );
 router.patch(
   '/updateMe',
+  upload.fields([
+   {name: 'profile_photo',maxCount:1},
+   {name: 'background_photo',maxCount:1}
+  ]),
   userController.updateMe
 );
 router.delete(
