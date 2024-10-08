@@ -68,59 +68,123 @@ exports.replyToPost = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.deleteReply = catchAsync(async (req, res, next) => {
-  const { postId, commentId } = req.params;
+exports.deleteComment = catchAsync(async (req, res, next) => {
+  const { commentId } = req.params;
+  let comment = await Comment.findById(commentid).populate("created_on");
 
-  const post = await Post.findById(postId);
-  if (!post) {
-    return next(new AppError('Post Not Found', 404));
-  }
-
-  const comment = await Comment.findById(commentId);
   if (!comment) {
-    return next(new AppError('Comment Not Found', 404));
+    return next(new AppError("Comment Not Found!!!", 404));
   }
+  let postid = comment?.created_on?._id;
 
-  // Check if the comment exists in the post's Comments array
-  const existsInPost = post.Comments.some(comment => comment._id.equals(commentId));
-  if (!existsInPost) {
-    return next(new AppError('No such comment is found', 400));
+  await Post.findByIdAndUpdate(postid, { $pull: { comments: commentid } });
+
+  await Comment.findByIdAndDelete(commentid);
+
+  if (comment?.comment_img?.url) {
+    const imgId = comment.comment_img?.url.split("/").pop().split(".")[0];
+    await deleteFromCloudinary(imgId);
   }
-
-  // Check if the current user has permission to delete the comment
-  if (!(post.postedBy.equals(req.user._id)) && !(comment.creator_id.equals(req.user._id))) {
-    return next(new AppError('Unauthorized Action', 401));
-  }
-
-  // Delete the comment image from Cloudinary if it exists
-  if (comment.comment_img && comment.comment_img.url) {
-    const imgId = comment.comment_img.url.split('/').pop().split('.')[0];
-    const deleteSuccess = await deleteFromCloudinary(imgId);
-    if (!deleteSuccess) {
-      return next(new AppError('Failed to delete image from Cloudinary', 500));
-    }
-  }
-
-  // Delete the comment
-  await Comment.findByIdAndDelete(commentId);
-
-  // Remove the comment ID from the post's Comments array
-  post.Comments.pull(commentId);
-  await post.save();
 
   res.status(200).json({
-    status: 'success',
-    data: {
-      post
-    }
+    status:"success",
+    msg: "OK"
   });
 });
+
+//deleteComment
+//   const post = await Post.findById(postId);
+//   if (!post) {
+//     return next(new AppError('Post Not Found', 404));
+//   }
+
+//   const comment = await Comment.findById(commentId);
+//   if (!comment) {
+//     return next(new AppError('Comment Not Found', 404));
+//   }
+
+//   // Check if the comment exists in the post's Comments array
+//   const existsInPost = post.Comments.some(comment => comment._id.equals(commentId));
+//   if (!existsInPost) {
+//     return next(new AppError('No such comment is found', 400));
+//   }
+
+//   // Check if the current user has permission to delete the comment
+//   if (!(post.postedBy.equals(req.user._id)) && !(comment.creator_id.equals(req.user._id))) {
+//     return next(new AppError('Unauthorized Action', 401));
+//   }
+
+//   // Delete the comment image from Cloudinary if it exists
+//   if (comment.comment_img && comment.comment_img.url) {
+//     const imgId = comment.comment_img.url.split('/').pop().split('.')[0];
+//     const deleteSuccess = await deleteFromCloudinary(imgId);
+//     if (!deleteSuccess) {
+//       return next(new AppError('Failed to delete image from Cloudinary', 500));
+//     }
+//   }
+
+//   // Delete the comment
+//   await Comment.findByIdAndDelete(commentId);
+
+//   // Remove the comment ID from the post's Comments array
+//   post.Comments.pull(commentId);
+//   await post.save();
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       post
+//     }
+//   });
+// });
 
 exports.likeComment = catchAsync(async (req ,res ,next) => {
-  
+  const { commentid } = req.params;
+  const { userid } = req.body;
+
+  const comment = await Comment.findById(commentid);
+  const user = await User.findById(userid);
+
+  if (!comment) {
+    return next(new AppError("Comment Not Found!!!", 404));
+  }
+
+  if (!user) {
+    return next(new AppError("User Not Valid!!", 400));
+  }
+
+  if (comment?.likes?.includes(userid)) {
+    return next(new AppError("Already Liked the Comment!!", 400));
+  }
+
+  comment?.likes?.push(user);
+
+  await comment.save();
+
   res.status(200).json({
     status: 'success',
-    message:'route not defined yet'
+    message: 'Friend request sent',
+    msg: "OK"
   });
 });
 
+exports.unlikeComment = catchAsync(async (req, res, next) => {
+  const { commentid } = req.params;
+  const { userid } = req.body;
+
+  const comment = await Comment.findById(commentid).populate("likes");
+
+  if (!comment) {
+    return next(new AppError("Comment Not Found!!!", 404));
+  }
+
+  // if (!comment?.likes?.includes(userid)) {
+  //   return next(new AppError("Invalid Action!!", 404));
+  // }
+
+  await Comment.findByIdAndUpdate(commentid, { $pull: { likes: userid } });
+
+  res.status(200).json({
+    msg: "OK",
+  });
+});

@@ -17,13 +17,12 @@ email: {
   type: String,
   required: [true, 'User must have an Email'],
   validate: [validator.isEmail, 'Please enter a valid email'],
-  unique: true,
-  lowercase: true  
+  unique: true
 },
 gender: {
     type: String,
     required: true,
-    enum: ["male", "female","others"],
+    enum: ["male", "female","others",""],
     default: ''
   },
   password: {
@@ -50,11 +49,6 @@ role: {
     type: String,
     enum:['user','admin'],
     default: 'user'
-},
-userType: {
-  type:String,
-  enum:['Recruiter','Job-Seeker'],
-  default: 'Job-Seeker'
 },
 dob: {
   type: String,
@@ -86,6 +80,12 @@ mobile_no: {
   minlength: 10,
 },
 saved: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+  },
+],
+posts: [
   {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Post",

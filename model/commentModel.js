@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const Post  = require('./postModel');
-const User = require('./userModel');
 
 const commentSchema = new mongoose.Schema({
   creator_name: {
@@ -41,7 +39,7 @@ const commentSchema = new mongoose.Schema({
     url: String,
   },
 
-  likes: Number,
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 // Adding an index to creator_id for faster querying

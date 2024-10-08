@@ -8,9 +8,9 @@ router.use(authController.protect);
 router.use(authController.restrictTo('user'));
 
 
-router.patch('/send-request/:id', friendController.sendFriendRequest);
-router.patch('/accept-request/:id', friendController.acceptFriendRequest);
-router.patch('/decline-request/:id', friendController.declineFriendRequest);
-router.patch('/unfriend/:id', friendController.unFriend);
+router.patch('/:id/send-request', friendController.sendFriendRequest);
+router.patch('/:id/accept-request', friendController.acceptFriendRequest);
+router.patch('/:id/decline-request', friendController.declineFriendRequest);
+router.patch('/:id/unfriend', friendController.unFriend);
 
 module.exports = router;

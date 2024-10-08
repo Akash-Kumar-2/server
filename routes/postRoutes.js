@@ -17,8 +17,10 @@ router.route('/feed').get(postController.getFeedPosts);
 router.route('/create').post(upload.single('img'), postController.createPost); // Use multer middleware here
 router.route('/user/:username').get(postController.getUserPosts);
 
-router.route('/:id/likeunlike').put(postController.likeUnlikePost);
-router.route('/:id/comment').post(upload.single('commentimg'),commentController.replyToPost);
+
+router.route('/:id/addlike').put(postController.likeUnlikePost);
+
+router.route('/:id/addcomment').post(upload.single('commentimg'),commentController.replyToPost);
 router.route('/:postId/comment/:commentId/delete').delete(commentController.deleteReply);
 
 module.exports = router;

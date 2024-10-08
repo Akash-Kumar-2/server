@@ -31,13 +31,19 @@ app.use(cookieParser());
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
   }
+  app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 
+app.use("/", homeRoute);
+app.use("/user", userRoute);
+app.use("/post", postRoute);
+app.use("/friend", friendRoute);
+app.use("/comment", commentRoute);
 // app.use('/api/v1/users',friendRouter);
-app.use('/api/v1/search',searchRouter);
-app.use('/api/v1/users',userRouter);
-app.use('/api/v1/posts', postRouter);
+// app.use('/api/v1/search',searchRouter);
+// app.use('/api/v1/users',userRouter);
+// app.use('/api/v1/posts', postRouter);
 
 app.all('*', (req, res, next) => {
     

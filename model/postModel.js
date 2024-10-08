@@ -1,36 +1,51 @@
 const mongoose = require('mongoose');
-const User = require('./userModel');
-const Comment = require('./commentModel');
 
 const postSchema = new mongoose.Schema({
-    postedBy: {
+    created_by: {
          type: mongoose.Schema.Types.ObjectId,
-         ref: "User",
-         required: true,
+         ref: "User"
     },
-    text: {
+
+    created_at: {
+     type: String,
+     required: true
+    },
+    post_text: {
         type: String,
         maxLength: 500,
     },
-    img: {
-        filename: {
-          type: String,
-          default: "Post_Image",
-        },
-        url: String,
+    post_img: {
+        filename: String,
+        url: String
       },
+      category: {
+        type: String,
+        default: "Simple Post",
+        enum: [
+          "Simple Post",
+          "Web Development",
+          "Content Writing",
+          "Full Stack Development",
+          "Marketing",
+          "Designing",
+          "SEO Optimization",
+          "Data Entry",
+        ],
+      },
+
       likes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }],
+    },
+  {
+    unique: true,
+  }],
     Comments: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Comment'
     }],
 },
-{
-    timestamps: true
-});
+);
 
 // Create a compound index to enforce uniqueness of userId within the likes array
 postSchema.index({ _id: 1, 'likes': 1 }, { unique: true });

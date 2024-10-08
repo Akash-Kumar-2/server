@@ -1,4 +1,5 @@
 const User = require('./../model/userModel');
+const Notification = require("../model/notificationModel");
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
@@ -35,13 +36,23 @@ exports.sendFriendRequest = catchAsync(async (req, res, next) => {
   user.friend_requests.push({ sent_by: req.user.id, sent_at: Date.now() });
   // Add friend request to sender's friend_requests field and marking isSent true
   currUser.friend_requests.push({ sent_by: id, sent_at: Date.now(), isSent: true });
+ 
+  const notification = new Notification({
+    category: "Friend Request",
+    sent_by: currUser,
+    sent_at: new Date(Date.now()),
+    url: "/",
+  });
+  user.notifications.push(notification);
 
+  await notification.save();
   await user.save();
   await currUser.save();
 
   res.status(200).json({
     status: 'success',
-    message: 'Friend request sent'
+    message: 'Friend request sent',
+    msg: 'OK'
   });
 });
 
@@ -103,7 +114,8 @@ exports.acceptFriendRequest = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    message: 'Friend request accepted'
+    message: 'Friend request accepted',
+    msg: 'OK'
   });
 });
 
@@ -139,7 +151,8 @@ exports.declineFriendRequest = catchAsync(async (req, res, next) => {
 
  res.status(200).json({
    status: 'success',
-   message: 'Friend request declined'
+   message: 'Friend request declined',
+   msg: 'OK'
  });
 });
 
@@ -173,6 +186,7 @@ exports.unFriend = catchAsync(async(req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    message: 'Unfriended successfully'
+    message: 'Unfriended successfully',
+    msg: 'OK'
   });
 });
