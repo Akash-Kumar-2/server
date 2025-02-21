@@ -1,8 +1,8 @@
-<h1 align='center'>ATG BACKEND</h1>
+<h1 align='center'>SYNCBYTE BACKEND</h1>
 
 <h3>Overview</h3>
 
-- The backend of ATG is responsible for handling user authentication, media upload, database management, and providing API endpoints for the frontend. This README provides a guide for setting up, running, 
+- The backend of SYNCBYTE is responsible for handling user authentication, media upload, database management, and providing API endpoints for the frontend. This README provides a guide for setting up, running, 
   and contributing to the backend.
 
   - **Table of Contents**
